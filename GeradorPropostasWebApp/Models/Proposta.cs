@@ -9,5 +9,4 @@
         public List<Servico> Servicos { get; set; } = new();
         public decimal Total => Servicos.Sum(s => s.Valor);
     }
-
 }

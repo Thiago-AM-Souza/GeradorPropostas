@@ -1,5 +1,36 @@
-﻿<h3>Clientes</h3>
+﻿@page "/clientes"
+@using GeradorPropostasWebApp.Models
+@using GeradorPropostasWebApp.Data
+@using Microsoft.EntityFrameworkCore
+@using System.Linq
+
+@inject AppDbContext Db
+
+<MudText Typo="Typo.h5">Clientes</MudText>
+
+<MudTable Items="_clientes" Hover="true">
+    <HeaderContent>
+        <MudTh>Nome</MudTh>
+        <MudTh>Email</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Nome</MudTd>
+        <MudTd>@context.Email</MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudButton Variant="Variant.Filled" OnClick="NovoCliente">Novo Cliente</MudButton>
 
 @code {
+    private List<Cliente> _clientes = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        //_clientes = await Db.Clientes.ToListAsync();
+    }
+
+    void NovoCliente()
+    {
+        
+    }
 }

@@ -1,7 +1,12 @@
 using MudBlazor.Services;
 using GeradorPropostasWebApp.Components;
+using GeradorPropostasWebApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=propostas.db"));
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
