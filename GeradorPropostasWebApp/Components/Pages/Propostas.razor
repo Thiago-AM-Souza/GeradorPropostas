@@ -1,0 +1,56 @@
+﻿@page "/propostas"
+@inject AppDbContext Db
+@using GeradorPropostasWebApp.Data
+@using GeradorPropostasWebApp.Models
+@using Microsoft.EntityFrameworkCore
+
+@using MudBlazor
+
+@inject NavigationManager Navigation
+
+<MudPaper Class="pa-5 d-flex flex-column gap-y-5" Elevation="4">
+    <MudText Typo="Typo.h5">Propostas Cadastradas</MudText>
+
+    <MudStack Row Justify="Justify.SpaceBetween">
+        <MudTextField @bind-Value="_filtro" Placeholder="Filtrar por cliente ou descrição…" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-3" Immediate="true" />
+        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/propostas/cadastrar"))"
+                   Variant="Variant.Filled" Color="Color.Primary">
+            Nova Proposta
+        </MudButton>
+    </MudStack>
+
+    <MudTable Items="_propostasFiltradas" Dense="true" Hover="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>Cliente</MudTh>
+            <MudTh>Data</MudTh>
+            <MudTh>Serviços</MudTh>
+            <MudTh>Total</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Cliente?.Nome</MudTd>
+            <MudTd>@context.DataCriacao.ToShortDateString()</MudTd>
+            <MudTd>@context.Servicos.Count</MudTd>
+            <MudTd>R$ @context.Total.ToString("F2")</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<Proposta> _propostas = new();
+    private string _filtro = string.Empty;
+
+    private IEnumerable<Proposta> _propostasFiltradas =>
+        string.IsNullOrWhiteSpace(_filtro)
+            ? _propostas
+            : _propostas.Where(p =>
+                   p.Cliente.Nome.Contains(_filtro, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _propostas = await Db.Propostas
+                             .Include(p => p.Cliente)
+                             .Include(p => p.Servicos)
+                             .OrderByDescending(p => p.DataCriacao)
+                             .ToListAsync();
+    }
+}

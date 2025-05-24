@@ -5,32 +5,64 @@
 @using System.Linq
 
 @inject AppDbContext Db
+@inject NavigationManager Navigation
 
-<MudText Typo="Typo.h5">Clientes</MudText>
+<MudPaper Class="d-flex flex-column gap-y-5 pa-5" Elevation="4">
+    <MudText Typo="Typo.h5">Clientes</MudText>
 
-<MudTable Items="_clientes" Hover="true">
-    <HeaderContent>
-        <MudTh>Nome</MudTh>
-        <MudTh>Email</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.Nome</MudTd>
-        <MudTd>@context.Email</MudTd>
-    </RowTemplate>
-</MudTable>
+    <MudButton Variant="Variant.Filled" OnClick="NovoCliente" Color="Color.Primary">Novo Cliente</MudButton>
 
-<MudButton Variant="Variant.Filled" OnClick="NovoCliente">Novo Cliente</MudButton>
+    <MudTable T="Cliente" Items="_clientes" Hover="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>Nome</MudTh>
+            <MudTh>Email</MudTh>
+            <MudTh>Telefone</MudTh>
+            <MudTh>Empresa</MudTh>
+            <MudTh>Ações</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Nome</MudTd>
+            <MudTd>@context.Email</MudTd>
+            <MudTd>@context.Telefone</MudTd>
+            <MudTd>@context.Empresa</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                OnClick="@(() => EditarCliente(context))" />
+
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                OnClick="@(() => ExcluirCliente(@context.Id))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
 
 @code {
     private List<Cliente> _clientes = new();
 
     protected override async Task OnInitializedAsync()
     {
-        //_clientes = await Db.Clientes.ToListAsync();
+        _clientes = await Db.Clientes.ToListAsync();
     }
 
     void NovoCliente()
     {
-        
+        Navigation.NavigateTo("/clientes/novo");
+    }
+
+    private void EditarCliente(Cliente cliente)
+    {
+        Navigation.NavigateTo($"/clientes/{cliente.Id}");
+    }
+
+    private async Task ExcluirCliente(int id)
+    {
+        var cliente = await Db.Clientes.FindAsync(id);
+
+        Db.Clientes.Remove(cliente);
+
+        await Db.SaveChangesAsync();
+
+        StateHasChanged();
     }
 }

@@ -1,5 +1,108 @@
-﻿<h3>NovaProposta</h3>
+﻿@page "/propostas/cadastrar"
+@inject AppDbContext Db
+@using GeradorPropostasWebApp.Data
+@using GeradorPropostasWebApp.Models
+
+@inject NavigationManager Navigation
+
+@using MudBlazor
+
+<MudPaper Class="pa-5" Elevation="4">
+    <MudText Typo="Typo.h5">Nova Proposta</MudText>
+
+
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int" Label="Cliente" @bind-Value="_novaProposta.ClienteId" Required="true">
+                    @foreach (var cliente in _clientes)
+                    {
+                        <MudSelectItem Value="@cliente.Id">@cliente.Nome</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-2" />
+
+        <MudText Typo="Typo.h6">Serviços</MudText>
+
+        <EditForm Model="_servicoTemporario" OnValidSubmit="AdicionarServico">
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Descrição" @bind-Value="_servicoTemporario.Descricao" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudNumericField T="decimal" Label="Valor (R$)" @bind-Value="_servicoTemporario.Valor" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="3">
+                    <MudButton Type="Submit" Color="Color.Primary" Variant="Variant.Filled">Adicionar</MudButton>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+
+        <MudTable Items="_novaProposta.Servicos" Hover="true" Dense="true" Class="my-2">
+            <HeaderContent>
+                <MudTh>Descrição</MudTh>
+                <MudTh>Valor</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Descricao</MudTd>
+                <MudTd>R$ @context.Valor.ToString("F2")</MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudText Typo="Typo.subtitle1">Total: <b>R$ @_novaProposta.Total.ToString("F2")</b></MudText>
+
+        <MudButton Type="Submit" Color="Color.Success" Variant="Variant.Filled" Class="mt-2">Salvar Proposta</MudButton>
+
+
+    <MudDivider Class="my-4" />
+    <MudText Typo="Typo.h6">Propostas Cadastradas</MudText>
+
+    <MudTable Items="_propostas" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>Cliente</MudTh>
+            <MudTh>Data</MudTh>
+            <MudTh>Total</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Cliente?.Nome</MudTd>
+            <MudTd>@context.DataCriacao.ToShortDateString()</MudTd>
+            <MudTd>R$ @context.Total.ToString("F2")</MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
 
 @code {
+    private List<Cliente> _clientes = new();
+    private List<Proposta> _propostas = new();
+    private Proposta _novaProposta = new();
+    private Servico _servicoTemporario = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        _clientes = await Db.Clientes.ToListAsync();
+        _propostas = await Db.Propostas.Include(p => p.Cliente).Include(p => p.Servicos).ToListAsync();
+    }
+
+    private async Task SalvarProposta()
+    {
+        Db.Propostas.Add(_novaProposta);
+        await Db.SaveChangesAsync();
+
+        _novaProposta = new();
+        _servicoTemporario = new();
+        _propostas = await Db.Propostas.Include(p => p.Cliente).Include(p => p.Servicos).ToListAsync();
+    }
+
+    private void AdicionarServico()
+    {
+        _novaProposta.Servicos.Add(new Servico
+        {
+            Descricao = _servicoTemporario.Descricao,
+            Valor = _servicoTemporario.Valor
+        });
+
+        _servicoTemporario = new();
+    }
 }

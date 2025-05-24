@@ -1,0 +1,66 @@
+﻿@page "/clientes/novo"
+@page "/clientes/{id}"
+
+@using GeradorPropostasWebApp.Data
+@using GeradorPropostasWebApp.Models
+
+@inject NavigationManager Navigation
+@inject AppDbContext Db
+
+
+<MudPaper Class="pa-5 d-flex flex-column gap-y-5" Elevation="4">
+
+    @if (!string.IsNullOrEmpty(Id))
+    {
+        <MudText Typo="Typo.h5">Edição de Cliente</MudText>
+    }
+    else
+    {        
+        <MudText Typo="Typo.h5">Cadastro de Cliente</MudText>
+    }
+
+    <EditForm Model="_cliente" OnValidSubmit="SalvarCliente">
+        <MudTextField @bind-Value="_cliente.Nome" Label="Nome" Required="true" />
+        <MudTextField @bind-Value="_cliente.Email" Label="Email" Required="true" />
+        <MudTextField @bind-Value="_cliente.Telefone" Label="Telefone" Required="true" />
+        <MudTextField @bind-Value="_cliente.Empresa" Label="Empresa" Required="true" />
+        <MudButton OnClick="SalvarCliente" Variant="Variant.Filled" Color="Color.Primary">Salvar</MudButton>
+    </EditForm>
+
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private Cliente _cliente = new();
+    private List<Cliente> _clientes = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Id))
+        {
+            _cliente = await Db.Clientes.FindAsync(int.Parse(Id));
+
+            if (_cliente is null)
+                Navigation.NavigateTo("/clientes");
+        }
+    }
+
+    private async Task SalvarCliente()
+    {
+        if (!string.IsNullOrEmpty(Id))
+        {
+            Db.Clientes.Update(_cliente);
+        }
+        else
+        {            
+            Db.Clientes.Add(_cliente);
+        }
+
+        await Db.SaveChangesAsync();
+        _cliente = new();
+        _clientes = await Db.Clientes.ToListAsync();
+        Navigation.NavigateTo("/clientes");
+    }
+}
